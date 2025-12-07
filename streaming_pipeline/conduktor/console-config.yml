@@ -1,0 +1,20 @@
+auth:
+  local:
+    enabled: true
+    users:
+      - username: "admin"
+        password: "admin"
+        groups:
+          - ADMIN
+
+clusters:
+  - id: "egypt-weather-kafka"
+    name: "Egypt Weather Kafka"
+    bootstrapServers: "kafka:29092"
+
+    # REQUIRED في النسخة الجديدة حتى لو مش بتستخدم Schema Registry
+    schemaRegistry:
+      enabled: false
+
+    # REQUIRED ولازم تبقى string مش object
+    properties: ""

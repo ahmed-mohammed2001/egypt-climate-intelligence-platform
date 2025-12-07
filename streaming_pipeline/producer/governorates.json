@@ -1,0 +1,137 @@
+[
+  {
+    "name": "Cairo",
+    "lat": 30.0444,
+    "lon": 31.2357
+  },
+  {
+    "name": "Giza",
+    "lat": 30.0131,
+    "lon": 31.2089
+  },
+  {
+    "name": "Alexandria",
+    "lat": 31.2001,
+    "lon": 29.9187
+  },
+  {
+    "name": "Aswan",
+    "lat": 24.0889,
+    "lon": 32.8998
+  },
+  {
+    "name": "Asyut",
+    "lat": 27.1793,
+    "lon": 31.1836
+  },
+  {
+    "name": "Beheira",
+    "lat": 31.34,
+    "lon": 30.4715
+  },
+  {
+    "name": "Beni Suef",
+    "lat": 29.0668,
+    "lon": 31.099
+  },
+  {
+    "name": "Dakahlia",
+    "lat": 31.0414,
+    "lon": 31.3785
+  },
+  {
+    "name": "Damietta",
+    "lat": 31.4167,
+    "lon": 31.8133
+  },
+  {
+    "name": "Faiyum",
+    "lat": 29.3086,
+    "lon": 30.8418
+  },
+  {
+    "name": "Gharbia",
+    "lat": 30.8766,
+    "lon": 31.0354
+  },
+  {
+    "name": "Ismailia",
+    "lat": 30.5965,
+    "lon": 32.2715
+  },
+  {
+    "name": "Kafr El Sheikh",
+    "lat": 31.1111,
+    "lon": 30.9375
+  },
+  {
+    "name": "Luxor",
+    "lat": 25.6872,
+    "lon": 32.6396
+  },
+  {
+    "name": "Matruh",
+    "lat": 31.354,
+    "lon": 25.132
+  },
+  {
+    "name": "Minya",
+    "lat": 28.0996,
+    "lon": 30.75
+  },
+  {
+    "name": "Monufia",
+    "lat": 30.4828,
+    "lon": 31.0389
+  },
+  {
+    "name": "New Valley",
+    "lat": 25.2083,
+    "lon": 28.617
+  },
+  {
+    "name": "North Sinai",
+    "lat": 30.3456,
+    "lon": 33.9059
+  },
+  {
+    "name": "Port Said",
+    "lat": 31.2653,
+    "lon": 32.3019
+  },
+  {
+    "name": "Qalyubia",
+    "lat": 30.3756,
+    "lon": 31.1843
+  },
+  {
+    "name": "Qena",
+    "lat": 26.155,
+    "lon": 32.7167
+  },
+  {
+    "name": "Red Sea",
+    "lat": 26.8206,
+    "lon": 34.9456
+  },
+  {
+    "name": "Sohag",
+    "lat": 26.5566,
+    "lon": 31.694
+  },
+  {
+    "name": "South Sinai",
+    "lat": 28.5392,
+    "lon": 33.9739
+  },
+  {
+    "name": "Suez",
+    "lat": 29.9668,
+    "lon": 32.5498
+  },
+  {
+    "name": "Helwan",
+    "lat": 29.8278,
+    "lon": 31.3579
+  }
+]

@@ -1,0 +1,69 @@
+{{
+    config(
+        materialized='incremental',
+        unique_key=['GOVERNORATE', 'DATETIME'],
+        on_schema_change='append_new_columns'
+    )
+}}
+
+WITH source_data AS (
+    SELECT
+        -- Standardize city names
+        CASE 
+            WHEN UPPER(TRIM(CITY)) = 'SIWAH' THEN 'MATROUH'
+            WHEN UPPER(TRIM(CITY)) = 'SHARM EL SHEIKH' THEN 'SOUTH SINAI'
+            WHEN UPPER(TRIM(CITY)) = 'ELWADY_ELGADED' THEN 'NEW VALLEY'
+            WHEN UPPER(TRIM(CITY)) = 'EL WADI EL GEDID' THEN 'NEW VALLEY'
+            WHEN UPPER(TRIM(CITY)) = 'SHARM _AL-SHAYKH' THEN 'SOUTH SINAI'
+            WHEN UPPER(TRIM(CITY)) = 'ALEX' THEN 'ALEXANDRIA'
+            ELSE UPPER(TRIM(CITY))
+        END AS GOVERNORATE,
+        
+        -- Create timestamp from date components
+        TO_TIMESTAMP(
+            CONCAT(
+                LPAD(YEAR::VARCHAR, 4, '0'), '-',
+                LPAD(MO::VARCHAR, 2, '0'), '-',
+                LPAD(DY::VARCHAR, 2, '0'), ' ',
+                LPAD(HR::VARCHAR, 2, '0'), ':00:00'
+            ),
+            'YYYY-MM-DD HH24:MI:SS'
+        ) AS DATETIME,
+        
+        ALLSKY_SFC_SW_DWN AS ALL_SKY_SURFACE_SHORTWAVE_DOWNWARD,
+        CLRSKY_SFC_SW_DWN AS CLEAR_SKY_SURFACE_SHORTWAVE_DOWNWARD,
+        ALLSKY_SFC_SW_DNI AS ALL_SKY_SURFACE_SHORTWAVE_DIRECT_NORMAL,
+        ALLSKY_SFC_SW_DIFF AS ALL_SKY_SURFACE_SHORTWAVE_DIFFUSE,
+        ALLSKY_SFC_PAR_TOT AS ALL_SKY_SURFACE_PAR_TOTAL,
+        CLRSKY_SFC_PAR_TOT AS CLEAR_SKY_SURFACE_PAR_TOTAL,
+        ALLSKY_SFC_UVA AS ALL_SKY_SURFACE_UVA,
+        ALLSKY_SFC_UVB AS ALL_SKY_SURFACE_UVB,
+        ALLSKY_SFC_UV_INDEX AS ALL_SKY_SURFACE_UV_INDEX,
+        LOAD_TIMESTAMP
+    FROM {{ source('bronze', 'SOLAR_ENERGY') }}
+    
+    {% if is_incremental() %}
+        WHERE LOAD_TIMESTAMP > (
+            SELECT COALESCE(MAX(LOAD_TIMESTAMP), '1970-01-01'::TIMESTAMP_NTZ)
+            FROM {{ this }}
+        )
+    {% endif %}
+)
+
+SELECT 
+    GOVERNORATE,
+    DATETIME,
+    ALL_SKY_SURFACE_SHORTWAVE_DOWNWARD,
+    CLEAR_SKY_SURFACE_SHORTWAVE_DOWNWARD,
+    ALL_SKY_SURFACE_SHORTWAVE_DIRECT_NORMAL,
+    ALL_SKY_SURFACE_SHORTWAVE_DIFFUSE,
+    ALL_SKY_SURFACE_PAR_TOTAL,
+    CLEAR_SKY_SURFACE_PAR_TOTAL,
+    ALL_SKY_SURFACE_UVA,
+    ALL_SKY_SURFACE_UVB,
+    ALL_SKY_SURFACE_UV_INDEX,
+    LOAD_TIMESTAMP,
+    CURRENT_TIMESTAMP() AS TRANSFORM_TIMESTAMP
+FROM source_data
+WHERE GOVERNORATE IS NOT NULL
+    AND DATETIME IS NOT NULL

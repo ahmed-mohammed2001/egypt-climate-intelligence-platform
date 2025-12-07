@@ -1,0 +1,814 @@
+{
+  "dashboard": {
+    "title": "Egypt Weather Monitoring Dashboard",
+    "tags": ["weather", "egypt", "streaming", "kafka"],
+    "timezone": "Africa/Cairo",
+    "editable": true,
+    "graphTooltip": 1,
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "refresh": "30s",
+    "templating": {
+      "list": [
+        {
+          "name": "governorate",
+          "type": "query",
+          "datasource": "PostgreSQL",
+          "query": "SELECT DISTINCT governorate FROM weatherStream ORDER BY governorate",
+          "multi": false,
+          "includeAll": true,
+          "allValue": ".*",
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          },
+          "label": "Governorate",
+          "refresh": 1
+        },
+        {
+          "name": "kafka_partition",
+          "type": "query",
+          "datasource": "PostgreSQL",
+          "query": "SELECT DISTINCT kafka_partition FROM weatherStream WHERE governorate =~ '$governorate' ORDER BY kafka_partition",
+          "multi": true,
+          "includeAll": true,
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          },
+          "label": "Kafka Partition",
+          "refresh": 1
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Current Temperature by Governorate",
+        "type": "geomap",
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 10},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT governorate, coord_lat as latitude, coord_lon as longitude, main_temp as temperature, weather_main, weather_description FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' AND id IN (SELECT MAX(id) FROM weatherStream WHERE $__timeFilter(recorded_at) GROUP BY governorate)",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "view": {
+            "id": "coords",
+            "lat": 26.8206,
+            "lon": 30.8025,
+            "zoom": 6
+          },
+          "basemap": {
+            "type": "default"
+          },
+          "layers": [
+            {
+              "type": "markers",
+              "config": {
+                "size": {
+                  "field": "temperature",
+                  "min": 5,
+                  "max": 30
+                },
+                "color": {
+                  "field": "temperature",
+                  "scheme": "Turbo"
+                },
+                "showLegend": true
+              }
+            }
+          ]
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {},
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "blue"},
+                {"value": 15, "color": "green"},
+                {"value": 25, "color": "orange"},
+                {"value": 35, "color": "red"}
+              ]
+            },
+            "unit": "celsius"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Temperature Trend",
+        "type": "timeseries",
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 10},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT recorded_at as time, governorate as metric, main_temp as value FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' ORDER BY recorded_at",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "spanNulls": true,
+              "showPoints": "auto",
+              "pointSize": 5
+            },
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "celsius",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "blue"},
+                {"value": 25, "color": "orange"},
+                {"value": 35, "color": "red"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          },
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "calcs": ["lastNotNull", "mean", "max", "min"]
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Current Weather Conditions",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 10, "w": 4, "h": 4},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT main_temp FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' ORDER BY recorded_at DESC LIMIT 1",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "celsius",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "blue"},
+                {"value": 15, "color": "green"},
+                {"value": 25, "color": "orange"},
+                {"value": 35, "color": "red"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "graphMode": "area",
+          "colorMode": "background",
+          "textMode": "value_and_name",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "text": {
+            "titleSize": 16,
+            "valueSize": 48
+          }
+        },
+        "pluginVersion": "10.0.0",
+        "transparent": false
+      },
+      {
+        "id": 4,
+        "title": "Humidity",
+        "type": "stat",
+        "gridPos": {"x": 4, "y": 10, "w": 4, "h": 4},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT main_humidity FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' ORDER BY recorded_at DESC LIMIT 1",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 30, "color": "orange"},
+                {"value": 50, "color": "green"},
+                {"value": 80, "color": "blue"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "graphMode": "area",
+          "colorMode": "background",
+          "textMode": "value_and_name",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Wind Speed",
+        "type": "stat",
+        "gridPos": {"x": 8, "y": 10, "w": 4, "h": 4},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT wind_speed FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' ORDER BY recorded_at DESC LIMIT 1",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "velocityms",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 5, "color": "yellow"},
+                {"value": 10, "color": "orange"},
+                {"value": 15, "color": "red"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "graphMode": "area",
+          "colorMode": "background",
+          "textMode": "value_and_name",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Pressure",
+        "type": "stat",
+        "gridPos": {"x": 12, "y": 10, "w": 4, "h": 4},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT main_pressure FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' ORDER BY recorded_at DESC LIMIT 1",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "pressurehpa",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "blue"},
+                {"value": 1010, "color": "green"},
+                {"value": 1020, "color": "yellow"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "graphMode": "area",
+          "colorMode": "background",
+          "textMode": "value_and_name",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Visibility",
+        "type": "stat",
+        "gridPos": {"x": 16, "y": 10, "w": 4, "h": 4},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT visibility FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' ORDER BY recorded_at DESC LIMIT 1",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "lengthm",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 1000, "color": "orange"},
+                {"value": 5000, "color": "yellow"},
+                {"value": 8000, "color": "green"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "graphMode": "area",
+          "colorMode": "background",
+          "textMode": "value_and_name",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Cloud Coverage",
+        "type": "stat",
+        "gridPos": {"x": 20, "y": 10, "w": 4, "h": 4},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT clouds_all FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' ORDER BY recorded_at DESC LIMIT 1",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 25, "color": "yellow"},
+                {"value": 50, "color": "orange"},
+                {"value": 75, "color": "blue"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "graphMode": "area",
+          "colorMode": "background",
+          "textMode": "value_and_name",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        }
+      },
+      {
+        "id": 9,
+        "title": "Weather Conditions Distribution",
+        "type": "piechart",
+        "gridPos": {"x": 0, "y": 14, "w": 8, "h": 8},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT weather_main, COUNT(*) as count FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' GROUP BY weather_main ORDER BY count DESC",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "tooltip": false,
+                "viz": false,
+                "legend": false
+              }
+            }
+          }
+        },
+        "options": {
+          "pieType": "donut",
+          "tooltip": {
+            "mode": "single"
+          },
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["value", "percent"]
+          },
+          "displayLabels": ["name", "percent"]
+        }
+      },
+      {
+        "id": 10,
+        "title": "Temperature vs Humidity Correlation",
+        "type": "timeseries",
+        "gridPos": {"x": 8, "y": 14, "w": 16, "h": 8},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT recorded_at as time, 'Temperature' as metric, main_temp as value FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' UNION ALL SELECT recorded_at as time, 'Humidity' as metric, main_humidity as value FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' ORDER BY time",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "fillOpacity": 0,
+              "axisPlacement": "auto"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Temperature"},
+              "properties": [
+                {"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}},
+                {"id": "custom.axisPlacement", "value": "left"},
+                {"id": "unit", "value": "celsius"}
+              ]
+            },
+            {
+              "matcher": {"id": "byName", "options": "Humidity"},
+              "properties": [
+                {"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}},
+                {"id": "custom.axisPlacement", "value": "right"},
+                {"id": "unit", "value": "percent"}
+              ]
+            }
+          ]
+        },
+        "options": {
+          "tooltip": {
+            "mode": "multi"
+          },
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          }
+        }
+      },
+      {
+        "id": 11,
+        "title": "Kafka Stream Performance",
+        "type": "timeseries",
+        "gridPos": {"x": 0, "y": 22, "w": 12, "h": 6},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT processed_at as time, kafka_partition as metric, COUNT(*) as value FROM weatherStream WHERE $__timeFilter(processed_at) AND governorate =~ '$governorate' AND kafka_partition = ANY(string_to_array('$kafka_partition', ',')::int[]) GROUP BY time_bucket('1 minute', processed_at), kafka_partition ORDER BY time",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "bars",
+              "lineWidth": 1,
+              "fillOpacity": 80
+            },
+            "unit": "short",
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        },
+        "options": {
+          "tooltip": {
+            "mode": "multi"
+          },
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "calcs": ["sum", "mean"]
+          }
+        }
+      },
+      {
+        "id": 12,
+        "title": "Processing Latency",
+        "type": "timeseries",
+        "gridPos": {"x": 12, "y": 22, "w": 12, "h": 6},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT recorded_at as time, EXTRACT(EPOCH FROM (processed_at - recorded_at)) as latency FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' ORDER BY recorded_at",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "fillOpacity": 20
+            },
+            "unit": "s",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 5, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "tooltip": {
+            "mode": "single"
+          },
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          }
+        }
+      },
+      {
+        "id": 13,
+        "title": "Temperature Heatmap by Hour",
+        "type": "heatmap",
+        "gridPos": {"x": 0, "y": 28, "w": 24, "h": 8},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT recorded_at as time, governorate, main_temp as value FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' ORDER BY time",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "tooltip": false,
+                "viz": false,
+                "legend": false
+              },
+              "scaleDistribution": {
+                "type": "linear"
+              }
+            },
+            "unit": "celsius",
+            "color": {
+              "mode": "scheme",
+              "scheme": "Turbo"
+            }
+          }
+        },
+        "options": {
+          "calculate": false,
+          "cellGap": 2,
+          "color": {
+            "exponent": 0.5,
+            "fill": "dark-orange",
+            "mode": "scheme",
+            "reverse": false,
+            "scale": "exponential",
+            "scheme": "Turbo",
+            "steps": 128
+          },
+          "exemplars": {
+            "color": "rgba(255,0,255,0.7)"
+          },
+          "filterValues": {
+            "le": 1e-9
+          },
+          "legend": {
+            "show": true
+          },
+          "rowsFrame": {
+            "layout": "auto"
+          },
+          "tooltip": {
+            "show": true,
+            "yHistogram": false
+          },
+          "yAxis": {
+            "axisPlacement": "left",
+            "reverse": false
+          }
+        }
+      },
+      {
+        "id": 14,
+        "title": "Wind Direction Compass",
+        "type": "gauge",
+        "gridPos": {"x": 0, "y": 36, "w": 8, "h": 6},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT wind_deg FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' ORDER BY recorded_at DESC LIMIT 1",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "degree",
+            "min": 0,
+            "max": 360,
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "blue"},
+                {"value": 90, "color": "green"},
+                {"value": 180, "color": "yellow"},
+                {"value": 270, "color": "orange"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "orientation": "auto",
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true,
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        }
+      },
+      {
+        "id": 15,
+        "title": "Governorate Statistics Table",
+        "type": "table",
+        "gridPos": {"x": 8, "y": 36, "w": 16, "h": 6},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "WITH latest AS (SELECT DISTINCT ON (governorate) governorate, main_temp, main_humidity, wind_speed, main_pressure, weather_main, recorded_at FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' ORDER BY governorate, recorded_at DESC) SELECT governorate as \"Governorate\", ROUND(main_temp::numeric, 1) as \"Temperature (°C)\", main_humidity as \"Humidity (%)\", ROUND(wind_speed::numeric, 2) as \"Wind Speed (m/s)\", main_pressure as \"Pressure (hPa)\", weather_main as \"Condition\", recorded_at as \"Last Update\" FROM latest ORDER BY governorate",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "center",
+              "displayMode": "auto"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Temperature (°C)"},
+              "properties": [
+                {
+                  "id": "custom.displayMode",
+                  "value": "gradient-gauge"
+                },
+                {
+                  "id": "color",
+                  "value": {
+                    "mode": "thresholds"
+                  }
+                },
+                {
+                  "id": "thresholds",
+                  "value": {
+                    "mode": "absolute",
+                    "steps": [
+                      {"value": null, "color": "blue"},
+                      {"value": 15, "color": "green"},
+                      {"value": 25, "color": "orange"},
+                      {"value": 35, "color": "red"}
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "matcher": {"id": "byName", "options": "Humidity (%)"},
+              "properties": [
+                {
+                  "id": "custom.displayMode",
+                  "value": "gradient-gauge"
+                },
+                {
+                  "id": "max",
+                  "value": 100
+                }
+              ]
+            }
+          ]
+        },
+        "options": {
+          "showHeader": true,
+          "sortBy": [
+            {
+              "displayName": "Last Update",
+              "desc": true
+            }
+          ]
+        }
+      },
+      {
+        "id": 16,
+        "title": "Message Rate by Partition",
+        "type": "bargauge",
+        "gridPos": {"x": 0, "y": 42, "w": 12, "h": 6},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT kafka_partition as metric, COUNT(*) as value FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' GROUP BY kafka_partition ORDER BY kafka_partition",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {
+              "mode": "palette-classic"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 100, "color": "yellow"},
+                {"value": 200, "color": "red"}
+              ]
+            }
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient",
+          "showUnfilled": true,
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        }
+      },
+      {
+        "id": 17,
+        "title": "Extreme Weather Alerts",
+        "type": "table",
+        "gridPos": {"x": 12, "y": 42, "w": 12, "h": 6},
+        "targets": [
+          {
+            "datasource": "PostgreSQL",
+            "rawSql": "SELECT governorate, main_temp as temperature, wind_speed, weather_main, recorded_at FROM weatherStream WHERE $__timeFilter(recorded_at) AND governorate =~ '$governorate' AND (main_temp > 40 OR main_temp < 5 OR wind_speed > 15 OR weather_main IN ('Rain', 'Thunderstorm', 'Snow')) ORDER BY recorded_at DESC LIMIT 50",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "center"
+            }
+          }
+        },
+        "options": {
+          "showHeader": true
+        },
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "renameByName": {
+                "governorate": "Location",
+                "temperature": "Temp (°C)",
+                "wind_speed": "Wind (m/s)",
+                "weather_main": "Condition",
+                "recorded_at": "Time"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

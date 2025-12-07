@@ -1,0 +1,107 @@
+version: 2
+
+sources:
+  - name: bronze
+    description: Bronze layer containing raw data from Azure Blob Storage
+    database: EGYPT_WEATHER_DB
+    schema: BRONZE
+    tables:
+      - name: AIR_POLLUTION
+        description: Raw air pollution data from various Egyptian governorates (2021-2025, hourly measurements)
+        columns:
+          - name: CITY
+            description: City or governorate name (will be standardized in Silver layer)
+          - name: DATETIME
+            description: Timestamp of measurement (hourly)
+          - name: AQI
+            description: Air Quality Index (1-5 scale)
+          - name: CO
+            description: Carbon Monoxide concentration (μg/m³)
+          - name: 'NO'
+            description: Nitrogen Monoxide concentration (μg/m³)
+          - name: NO2
+            description: Nitrogen Dioxide concentration (μg/m³)
+          - name: O3
+            description: Ozone concentration (μg/m³)
+          - name: SO2
+            description: Sulfur Dioxide concentration (μg/m³)
+          - name: PM2_5
+            description: Particulate Matter 2.5 concentration (μg/m³)
+          - name: PM10
+            description: Particulate Matter 10 concentration (μg/m³)
+          - name: NH3
+            description: Ammonia concentration (μg/m³)
+          - name: LOAD_TIMESTAMP
+            description: Timestamp when data was loaded to Bronze layer from Azure
+          
+      - name: SOLAR_ENERGY
+        description: Raw solar energy data from various Egyptian cities (2006-2025, hourly measurements)
+        columns:
+          - name: YEAR
+            description: Year of measurement (2006-2025)
+          - name: MO
+            description: Month of measurement (1-12)
+          - name: DY
+            description: Day of measurement (1-31)
+          - name: HR
+            description: Hour of measurement (0-23)
+          - name: ALLSKY_SFC_SW_DWN
+            description: All Sky Surface Shortwave Downward Irradiance (W/m²)
+          - name: CLRSKY_SFC_SW_DWN
+            description: Clear Sky Surface Shortwave Downward Irradiance (W/m²)
+          - name: ALLSKY_SFC_SW_DNI
+            description: All Sky Surface Shortwave Direct Normal Irradiance (W/m²)
+          - name: ALLSKY_SFC_SW_DIFF
+            description: All Sky Surface Shortwave Diffuse Irradiance (W/m²)
+          - name: ALLSKY_SFC_PAR_TOT
+            description: All Sky Surface Photosynthetically Active Radiation Total (W/m²)
+          - name: CLRSKY_SFC_PAR_TOT
+            description: Clear Sky Surface Photosynthetically Active Radiation Total (W/m²)
+          - name: ALLSKY_SFC_UVA
+            description: All Sky Surface UVA Irradiance (W/m²)
+          - name: ALLSKY_SFC_UVB
+            description: All Sky Surface UVB Irradiance (W/m²)
+          - name: ALLSKY_SFC_UV_INDEX
+            description: All Sky Surface UV Index (0-11+ scale)
+          - name: CITY
+            description: City or governorate name (will be standardized in Silver layer)
+          - name: LOAD_TIMESTAMP
+            description: Timestamp when data was loaded to Bronze layer from Azure
+          
+      - name: WEATHER
+        description: Raw weather data from various Egyptian governorates (1981-2025, daily measurements)
+        columns:
+          - name: CITY
+            description: City or governorate name (will be standardized in Silver layer)
+          - name: DATE
+            description: Date of measurement (daily)
+          - name: T2M
+            description: Temperature at 2 Meters mean (°C)
+          - name: T2MDEW
+            description: Dew Point Temperature at 2 Meters (°C)
+          - name: T2MWET
+            description: Wet Bulb Temperature at 2 Meters (°C)
+          - name: TS
+            description: Earth Skin Temperature (°C)
+          - name: T2M_RANGE
+            description: Temperature Range at 2 Meters (°C)
+          - name: T2M_MAX
+            description: Maximum Temperature at 2 Meters (°C)
+          - name: T2M_MIN
+            description: Minimum Temperature at 2 Meters (°C)
+          - name: QV2M
+            description: Specific Humidity at 2 Meters (g/kg)
+          - name: RH2M
+            description: Relative Humidity at 2 Meters (%)
+          - name: PRECTOTCORR
+            description: Precipitation Corrected (mm/day)
+          - name: PS
+            description: Surface Pressure (kPa)
+          - name: WS10M
+            description: Wind Speed at 10 Meters mean (m/s)
+          - name: WS10M_MAX
+            description: Maximum Wind Speed at 10 Meters (m/s)
+          - name: WS10M_MIN
+            description: Minimum Wind Speed at 10 Meters (m/s)
+          - name: LOAD_TIMESTAMP
+            description: Timestamp when data was loaded to Bronze layer from Azure

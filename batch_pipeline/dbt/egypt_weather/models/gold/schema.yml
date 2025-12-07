@@ -1,0 +1,131 @@
+version: 2
+
+models:
+  # ---------------------------------------------------------------------------
+  # DIMENSIONS
+  # ---------------------------------------------------------------------------
+  
+  - name: dim_governorate
+    description: Dimension table for Egyptian governorates with regional classification
+    columns:
+      - name: GOVERNORATE_KEY
+        description: Surrogate key for governorate
+        tests:
+          - unique
+          - not_null
+      - name: GOVERNORATE_NAME
+        description: Standardized name of the governorate
+        tests:
+          - unique
+          - not_null
+      - name: REGION
+        description: Regional classification
+        tests:
+          - not_null
+
+  - name: dim_date
+    description: Date dimension table covering 1981 to 2025
+    columns:
+      - name: DATE_KEY
+        description: Surrogate key for date in YYYYMMDD format
+        tests:
+          - unique
+          - not_null
+      - name: DATE_VALUE
+        description: Actual date value
+        tests:
+          - unique
+          - not_null
+      - name: YEAR
+        description: Year (1981-2025)
+        tests:
+          - not_null
+      - name: SEASON
+        description: Season name
+        tests:
+          - not_null
+
+  # ---------------------------------------------------------------------------
+  # FACTS
+  # ---------------------------------------------------------------------------
+  
+  - name: fact_air_pollution
+    description: Fact table containing hourly air pollution measurements
+    columns:
+      - name: AIR_POLLUTION_KEY
+        description: Surrogate key for air pollution record
+        tests:
+          - unique
+          - not_null
+      - name: GOVERNORATE_KEY
+        description: Foreign key to dim_governorate
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_governorate')
+              field: GOVERNORATE_KEY
+      - name: DATE_KEY
+        description: Foreign key to dim_date
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: DATE_KEY
+      - name: DATETIME
+        description: Full timestamp of measurement
+        tests:
+          - not_null
+
+  - name: fact_solar_energy
+    description: Fact table containing hourly solar energy measurements
+    columns:
+      - name: SOLAR_ENERGY_KEY
+        description: Surrogate key for solar energy record
+        tests:
+          - unique
+          - not_null
+      - name: GOVERNORATE_KEY
+        description: Foreign key to dim_governorate
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_governorate')
+              field: GOVERNORATE_KEY
+      - name: DATE_KEY
+        description: Foreign key to dim_date
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: DATE_KEY
+      - name: DATETIME
+        description: Full timestamp of measurement
+        tests:
+          - not_null
+
+  - name: fact_weather
+    description: Fact table containing daily weather measurements
+    columns:
+      - name: WEATHER_KEY
+        description: Surrogate key for weather record
+        tests:
+          - unique
+          - not_null
+      - name: GOVERNORATE_KEY
+        description: Foreign key to dim_governorate
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_governorate')
+              field: GOVERNORATE_KEY
+      - name: DATE_KEY
+        description: Foreign key to dim_date
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: DATE_KEY
+      - name: DATE
+        description: Date of measurement
+        tests:
+          - not_null
